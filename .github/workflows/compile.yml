@@ -5,7 +5,8 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkitarm:latest
+    # This specific image has all 3DS tools, rules, and 3ds.h completely pre-installed
+    container: devkitpro/toolchain-3ds:latest
 
     steps:
       - name: Checkout code
@@ -13,16 +14,10 @@ jobs:
 
       - name: Compile 3DSX
         run: |
-          # 1. Bypass git security blocks
+          # Bypass git security blocks on GitHub's server
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           
-          # 2. Tell the system exactly where 3ds.h and libctru are hidden
-          export DEVKITPRO=/opt/devkitpro
-          export DEVKITARM=$DEVKITPRO/devkitARM
-          export CTRULIB=$DEVKITPRO/libctru
-          export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
-          
-          # 3. Clean any cached files and build fresh
+          # Clean old build caches and run the compiler
           make clean || true
           make
           
