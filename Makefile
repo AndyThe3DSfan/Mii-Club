@@ -29,15 +29,19 @@ $(BUILD):
 	mkdir -p $@
 
 $(BUILD)/%.o: $(SOURCES)/%.cpp | $(BUILD)
+	@echo compiling $(notdir $<)
 	$(CXX) $(ARCH) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 $(TARGET).elf: $(OBJECTS)
+	@echo linking $(notdir $@)
 	$(CXX) $(ARCH) $(OBJECTS) $(LIBS) -o $@
 
 $(TARGET).3dsx: $(TARGET).elf
+	@echo building $(notdir $@)
 	3dsxtool $< $@
 
 clean:
+	@echo cleaning up build files...
 	rm -rf $(BUILD) $(TARGET).elf $(TARGET).3dsx
 
 -include $(BUILD)/*.d
