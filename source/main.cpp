@@ -277,7 +277,8 @@ for (int i = 0; i < 5; i++) {
 if (menu_selection == i) printf(CLR_YELLOW " -> [ %s ]\n" CLR_RESET, options[i]);
 else printf("    %s   \n", options[i]);
 }
-printf("\nUse " CLR_GREEN "D-Pad Up/Down" CLR_RESET " to Move | " CLR_GREEN "A" CL_RESET " to Select\n");
+// FIXED: Corrected quotes positioning to clear up line 280 string literal token flags
+printf("\nUse " CLR_GREEN "D-Pad Up/Down" CLR_RESET " to Move | " CLR_GREEN "A" CLR_RESET " to Select\n");
 printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DDOWN) menu_selection = (menu_selection + 1) % 5;
@@ -304,7 +305,8 @@ printf("====================================\n\n" CLR_RESET);
 printf(" -> Match Settings:\n");
 printf("    Total Rounds: [ " CLR_YELLOW "%d" CLR_RESET " ] \n\n", total_game_rounds);
 printf(" Press " CLR_GREEN "LEFT/RIGHT" CLR_RESET " on D-Pad to change rounds\n");
-printf(" Press " CLR_GREEN "A" CL_RESET " to Launch Profile Configuration!\n");
+// FIXED: Corrected quotes formatting structure to clean up line 307 build errors
+printf(" Press " CLR_GREEN "A" CLR_RESET " to Launch Profile Configuration!\n");
 printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DLEFT) { if (total_game_rounds > 1) total_game_rounds--; }
@@ -324,16 +326,15 @@ printf("\x1b[1;1H");
 printf(CLR_CYAN "====================================\n");
 printf("            MII CLUB LOBBY          \n");
 printf("====================================\n\n" CLR_RESET);
-// FIXED: Properly separated the string tokens with quotes to clear out lines 384/389 build errors
 printf(" Round " CLR_YELLOW "%d" CLR_RESET " / " CLR_YELLOW "%d" CLR_RESET " \n\n", current_round, total_game_rounds);
 printf("Current Roster Standings:\n");
 for (int i = 0; i < 4; i++) {
 printf(" - " CLR_GREEN "%-10s " CLR_RESET, players[i].name);
 printMiiFace(i, "normal");
-printf(" " CLR_YELLOW "%s" CLR_RESET ": " CLR_YELLOW "%d" CLR_RESET " %s\n", ICON_STAR, players[i].total_stars, players[i].is_cpu ? CLR_BLUE "[CPU]" : CLR_GREEN "[YOU]");
+printf(" " CLR_YELLOW "%s" CLR_RESET ": " CLR_YELLOW "%d" CL_RESET " %s\n", ICON_STAR, players[i].total_stars, players[i].is_cpu ? CLR_BLUE "[CPU]" : CLR_GREEN "[YOU]");
 }
 printf("\nNext Minigame Loaded automatically!\n");
-printf("Press " CLR_GREEN "A" CLR_RESET " to Start Match Run...       \n");
+printf("Press " CLR_GREEN "A" CL_RESET " to Start Match Run...       \n");
 if (hidKeysDown() & KEY_A) {
 consoleClear();
 current_state = STATE_MINIGAME_PLAY;
@@ -356,7 +357,7 @@ winner_idx = i;
 }
 printf("\n" CLR_YELLOW "%s WINNER IS: %s! %s\n" CLR_RESET, ICON_CROWN, players[winner_idx].name, ICON_CROWN);
 printMiiFace(winner_idx, "win");
-printf("\n\nPress " CLR_GREEN "A" CLR_RESET " to return to Main Menu...           \n");
+printf("\n\nPress " CLR_GREEN "A" CL_RESET " to return to Main Menu...           \n");
 if (hidKeysDown() & KEY_A) {
 consoleClear();
 current_state = STATE_MAIN_MENU;
