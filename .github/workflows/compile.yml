@@ -24,12 +24,13 @@ jobs:
           export DEVKITARM=$DEVKITPRO/devkitARM
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
           
-          # This forces the compiler to look in the exact directory where 3ds.h was just installed
-          export EXTRACXXFLAGS="-I/opt/devkitpro/libctru/include"
-          export EXTRACFLAGS="-I/opt/devkitpro/libctru/include"
+          # This creates a perfect shortcut folder inside your source folder 
+          # so your code finds <3ds.h> without needing the Makefile's permission!
+          ln -s /opt/devkitpro/libctru/include/3ds.h source/3ds.h
+          ln -s /opt/devkitpro/libctru/include/3ds source/3ds
           
           make clean || true
-          make EXTRACXXFLAGS="$EXTRACXXFLAGS" EXTRACFLAGS="$EXTRACFLAGS"
+          make
           
       - name: Upload Finished 3DSX File
         uses: actions/upload-artifact@v4
