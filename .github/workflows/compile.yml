@@ -5,8 +5,8 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    # This specific image has all 3DS tools, rules, and 3ds.h completely pre-installed
-    container: devkitpro/toolchain-3ds:latest
+    # This community image includes devkitARM and all 3DS libctru libraries pre-installed
+    container: ghcr.io/gsh99/devkitpro-docker/3ds:latest
 
     steps:
       - name: Checkout code
