@@ -5,29 +5,23 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: devkitpro/devkitarm:latest
-      options: --user root
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install 3DS Components Natively
-        run: |
-          dkp-pacman -Syy --noconfirm
-          dkp-pacman -S --noconfirm 3ds-dev
+      # This officially mounts the complete, pre-authenticated 3DS developer kit
+      - name: Set up devkitPro
+        uses: devkitPro/actions-setup@v1
+        with:
+          actions: '3ds-dev'
 
       - name: Compile 3DSX
         run: |
+          # Explicitly match system folders to the freshly mounted devkitPro runner paths
           export DEVKITPRO=/opt/devkitpro
           export DEVKITARM=$DEVKITPRO/devkitARM
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
-          
-          # This creates a perfect shortcut folder inside your source folder 
-          # so your code finds <3ds.h> without needing the Makefile's permission!
-          ln -s /opt/devkitpro/libctru/include/3ds.h source/3ds.h
-          ln -s /opt/devkitpro/libctru/include/3ds source/3ds
           
           make clean || true
           make
