@@ -5,21 +5,39 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    # This community image includes devkitARM and all 3DS libctru libraries pre-installed
-    container: ghcr.io/gsh99/devkitpro-docker/3ds:latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download and Setup 3DS Toolchain
+        run: |
+          # 1. Download official portable devkitARM and 3DS development rules
+          mkdir -p $HOME/devkitpro
+          wget -qO- https://github.com | tar -xzf - -C $HOME/devkitpro
+          
+          # 2. Grab a stable build of the arm compiler binaries directly
+          wget -q https://github.com
+          tar -xf devkitarm-r55-x86_64-linux.tar.xz -C $HOME/devkitpro
+          
+          # 3. Pull down the missing 3ds.h and libctru header files directly into the repository
+          git clone --depth=1 https://github.com
+          mkdir -p source/include
+          cp -r libctru/libctru/include/* source/
+
       - name: Compile 3DSX
         run: |
-          # Bypass git security blocks on GitHub's server
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # Setup paths for the bare compiler variables
+          export DEVKITPRO=$HOME/devkitpro
+          export DEVKITARM=$DEVKITPRO/devkitARM
+          export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
           
-          # Clean old build caches and run the compiler
+          # Force compiler flags to look inside our pulled include folders for 3ds.h
+          export EXTRACXXFLAGS="-I../libctru/libctru/include"
+          export EXTRACFLAGS="-I../libctru/libctru/include"
+          
           make clean || true
-          make
+          make EXTRACXXFLAGS="$EXTRACXXFLAGS" EXTRACFLAGS="$EXTRACFLAGS"
           
       - name: Upload Finished 3DSX File
         uses: actions/upload-artifact@v4
