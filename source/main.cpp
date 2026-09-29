@@ -306,6 +306,7 @@ static void processMinigameResults() {
         players[i].total_stars += players[i].score;
         printf("%d. " CLR_GREEN "%-10s " CLR_RESET, i + 1, players[i].name);
         printMiiFace(i, players[i].score >= 3 ? "win" : "normal");
+
 printf(" Earned: " CLR_YELLOW "+%d %s " CLR_RESET "(Total: " CLR_YELLOW "%d" CLR_RESET ")\n", players[i].score, ICON_STAR, players[i].total_stars);
 }
 printf("\nPress " CLR_GREEN "A" CLR_RESET " to proceed...");
