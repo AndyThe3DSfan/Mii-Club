@@ -24,10 +24,10 @@ enum MinigameType {
 
 struct PartyMii {
     MiiData data{};
-    char name[32] = {0};
-    bool is_cpu = true;
-    int score = 0;
-    int total_stars = 0;
+    char name[32];
+    bool is_cpu;
+    int score;
+    int total_stars;
 };
 
 // Global Variables
@@ -316,7 +316,6 @@ current_round++;
 if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
-// FIXED: Resolved array cast logic structure
 active_game = static_cast(std::rand() % GAME_COUNT);
 current_state = STATE_PARTY_LOBBY;
 }
@@ -386,7 +385,6 @@ printf("Current Roster Standings:\n");
 for (int i = 0; i < 4; i++) {
 printf(" - " CLR_GREEN "%-10s " CLR_RESET, players[i].name);
 printMiiFace(i, "normal");
-// FIXED: Added missing ternary operator to resolve build crash
 printf(" " CLR_YELLOW "%s" CLR_RESET ": " CLR_YELLOW "%d" CLR_RESET " %s\n", ICON_STAR, players[i].total_stars, players[i].is_cpu ? CLR_BLUE "[CPU]" : CLR_GREEN "[YOU]");
 }
 printf("\nNext Minigame Loaded automatically!\n");
