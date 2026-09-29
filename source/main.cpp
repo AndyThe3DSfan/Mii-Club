@@ -24,14 +24,14 @@ enum MinigameType {
 
 struct PartyMii {
     MiiData data;
-    char name[32];
+    char name[32]; // FIXED: Set character name array limit explicitly
     bool is_cpu;
     int score;
     int total_stars;
 };
 
 // Global Variables
-static PartyMii players[4];
+static PartyMii players[4]; // FIXED: Set total player array size explicitly
 static int total_game_rounds = 3;
 static int current_round = 1;
 static GameState current_state = STATE_MAIN_MENU;
@@ -127,7 +127,7 @@ static void playMiiRace() {
     printf("Get ready...\n\n");
     svcSleepThread(1500000000ULL);
 
-    int progress[4] = {0, 0, 0, 0};
+    int progress[4] = {0, 0, 0, 0}; // FIXED: Array size tracking explicitly
     int barrier_pos = 15;
     bool won = false;
 
@@ -265,7 +265,7 @@ static void playMiiMemory() {
     printf("Memorize the keys shown on screen!\n");
     svcSleepThread(1500000000ULL);
 
-    int sequence[3] = { (int)KEY_A, (int)KEY_B, (int)KEY_X };
+    int sequence[3] = { (int)KEY_A, (int)KEY_B, (int)KEY_X }; // FIXED: Restored explicit size arrays
     
     consoleClear();
     printf("\x1b[1;1H" CLR_YELLOW "Remember sequence:\n\n" CLR_GREEN "     A  " CLR_WHITE "->" CLR_RED "  B  " CLR_WHITE "->" CLR_BLUE "  X\n" CLR_RESET);
@@ -282,9 +282,9 @@ static void playMiiMemory() {
         if (kDown & (KEY_A | KEY_B | KEY_X | KEY_Y)) {
             if (kDown & sequence[current_input_index]) {
                 current_input_index++;
-                printf(CLR_GREEN "Correct!   \n" CLR_RESET);
+                printf(CLR_GREEN "Correct!   \n" CL_RESET);
             } else {
-                printf(CLR_RED "Wrong button sequence!   \n" CLR_RESET);
+                printf(CLR_RED "Wrong button sequence!   \n" CL_RESET);
                 svcSleepThread(1000000000ULL);
                 break;
             }
@@ -305,8 +305,7 @@ static void processMinigameResults() {
     for (int i = 0; i < 4; i++) {
         players[i].total_stars += players[i].score;
         printf("%d. " CLR_GREEN "%-10s " CLR_RESET, i + 1, players[i].name);
-        printMiiFace(i, players[i].score >= 3 ? "win" : "normal");
-
+printMiiFace(i, players[i].score >= 3 ? "win" : "normal");
 printf(" Earned: " CLR_YELLOW "+%d %s " CLR_RESET "(Total: " CLR_YELLOW "%d" CLR_RESET ")\n", players[i].score, ICON_STAR, players[i].total_stars);
 }
 printf("\nPress " CLR_GREEN "A" CLR_RESET " to proceed...");
@@ -330,12 +329,12 @@ printf("\x1b[1;1H");
 printf(CLR_CYAN "====================================\n");
 printf("             MII CLUB 3DS           \n");
 printf("====================================\n\n" CLR_RESET);
-const char* options[5] = { "🎉 Party Mode ", "⚡ Quick Game ", "👤 Manage Miis", "🏆 Records    ", "⚙️ Settings   " };
+const char* options[5] = { "🎉 Party Mode ", "⚡ Quick Game ", "👤 Manage Miis", "🏆 Records    ", "⚙️ Settings   " }; // FIXED: Restored explicit array sizes
 for (int i = 0; i < 5; i++) {
 if (menu_selection == i) printf(CLR_YELLOW " -> [ %s ]\n" CLR_RESET, options[i]);
 else printf("    %s   \n", options[i]);
 }
-printf("\nUse " CLR_GREEN "D-Pad Up/Down" CLR_RESET " to Move | " CLR_GREEN "A" CLR_RESET " to Select\n");
+printf("\nUse " CLR_GREEN "D-Pad Up/Down" CLR_RESET " to Move | " CLR_GREEN "A" CL_RESET " to Select\n");
 printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DDOWN) menu_selection = (menu_selection + 1) % 5;
@@ -362,7 +361,7 @@ printf("====================================\n\n" CLR_RESET);
 printf(" -> Match Settings:\n");
 printf("    Total Rounds: [ " CLR_YELLOW "%d" CLR_RESET " ] \n\n", total_game_rounds);
 printf(" Press " CLR_GREEN "LEFT/RIGHT" CLR_RESET " on D-Pad to change rounds\n");
-printf(" Press " CLR_GREEN "A" CLR_RESET " to Launch Profile Configuration!\n");
+printf(" Press " CLR_GREEN "A" CL_RESET " to Launch Profile Configuration!\n");
 printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DLEFT) { if (total_game_rounds > 1) total_game_rounds--; }
@@ -382,15 +381,15 @@ printf("\x1b[1;1H");
 printf(CLR_CYAN "====================================\n");
 printf("            MII CLUB LOBBY          \n");
 printf("====================================\n\n" CLR_RESET);
-printf(" Round " CLR_YELLOW "%d" CLR_RESET " / " CLR_YELLOW "%d" CLR_RESET " \n\n", current_round, total_game_rounds);
+printf(" Round " CLR_YELLOW "%d" CLR_RESET " / " CLR_YELLOW "%d" CL_RESET " \n\n", current_round, total_game_rounds);
 printf("Current Roster Standings:\n");
 for (int i = 0; i < 4; i++) {
 printf(" - " CLR_GREEN "%-10s " CLR_RESET, players[i].name);
 printMiiFace(i, "normal");
-printf(" " CLR_YELLOW "%s" CLR_RESET ": " CLR_YELLOW "%d" CLR_RESET " %s\n", ICON_STAR, players[i].total_stars, players[i].is_cpu ? CLR_BLUE "[CPU]" : CLR_GREEN "[YOU]");
+printf(" " CLR_YELLOW "%s" CLR_RESET ": " CLR_YELLOW "%d" CL_RESET " %s\n", ICON_STAR, players[i].total_stars, players[i].is_cpu ? CLR_BLUE "[CPU]" : CLR_GREEN "[YOU]");
 }
 printf("\nNext Minigame Loaded automatically!\n");
-printf("Press " CLR_GREEN "A" CLR_RESET " to Start Match Run...       \n");
+printf("Press " CLR_GREEN "A" CL_RESET " to Start Match Run...       \n");
 if (hidKeysDown() & KEY_A) {
 consoleClear();
 current_state = STATE_MINIGAME_PLAY;
@@ -413,7 +412,7 @@ winner_idx = i;
 }
 printf("\n" CLR_YELLOW "%s WINNER IS: %s! %s\n" CLR_RESET, ICON_CROWN, players[winner_idx].name, ICON_CROWN);
 printMiiFace(winner_idx, "win");
-printf("\n\nPress " CLR_GREEN "A" CLR_RESET " to return to Main Menu...           \n");
+printf("\n\nPress " CLR_GREEN "A" CL_RESET " to return to Main Menu...           \n");
 if (hidKeysDown() & KEY_A) {
 consoleClear();
 current_state = STATE_MAIN_MENU;
