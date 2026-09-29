@@ -13,15 +13,17 @@ jobs:
 
       - name: Compile 3DSX
         run: |
-          # 1. Bypass git security walls on GitHub's server
+          # 1. Bypass git security blocks
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           
-          # 2. Tell the system exactly where devkitPro is hidden inside the container
+          # 2. Tell the system exactly where 3ds.h and libctru are hidden
           export DEVKITPRO=/opt/devkitpro
           export DEVKITARM=$DEVKITPRO/devkitARM
+          export CTRULIB=$DEVKITPRO/libctru
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
           
-          # 3. Run the compiler
+          # 3. Clean any cached files and build fresh
+          make clean || true
           make
           
       - name: Upload Finished 3DSX File
