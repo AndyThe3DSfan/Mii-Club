@@ -10,28 +10,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Official devkitARM Compiler Tools
+      - name: Install Official 3DS Toolchain
         run: |
-          # Create a secure home directory for the tools
-          mkdir -p $HOME/devkitpro
+          # 1. Download and run the official devkitPro installer script
+          wget https://devkitpro.org
+          chmod +x install-devkitpro-pacman
+          sudo ./install-devkitpro-pacman --noconfirm
           
-          # Download the verified standalone Linux devkitARM compiler package
-          wget -q https://github.com || wget -q https://github.com
-          tar -xf devkitARM_r55-x86_64-linux.tar.xz -C $HOME/devkitpro
-          
-          # Clone the official 3DS hardware library headers directly so 3ds.h is present
-          git clone --depth=1 https://github.com $HOME/devkitpro/libctru
+          # 2. Directly install the 3DS development packages
+          sudo /opt/devkitpro/pacman/bin/pacman -S --noconfirm 3ds-dev
 
       - name: Compile 3DSX
         run: |
-          # Map out the exact file paths manually
-          export DEVKITPRO=$HOME/devkitpro
+          # 3. Point to the fresh tools
+          export DEVKITPRO=/opt/devkitpro
           export DEVKITARM=$DEVKITPRO/devkitARM
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
-          
-          # Inject the missing 3ds.h library path straight into your Makefile's compiler rule
-          export CFLAGS="-I$DEVKITPRO/libctru/libctru/include $CFLAGS"
-          export CXXFLAGS="-I$DEVKITPRO/libctru/libctru/include $CXXFLAGS"
           
           make clean || true
           make
