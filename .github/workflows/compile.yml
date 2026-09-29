@@ -11,11 +11,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install 3DS Development Libraries
+        run: |
+          # Installs libctru, citro3d, and the 3DS build rules
+          sudo dkp-pacman -Syu --noconfirm 3ds-dev
+
       - name: Compile 3DSX
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           make
-
+          
       - name: Upload Finished 3DSX File
         uses: actions/upload-artifact@v4
         with:
