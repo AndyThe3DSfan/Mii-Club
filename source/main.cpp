@@ -23,7 +23,7 @@ enum MinigameType {
 };
 
 struct PartyMii {
-    MiiData data{};
+    MiiData data;
     char name[32];
     bool is_cpu;
     int score;
@@ -316,7 +316,8 @@ current_round++;
 if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
-active_game = static_cast(std::rand() % GAME_COUNT);
+int next_game = std::rand() % (int)GAME_COUNT;
+active_game = static_cast(next_game);
 current_state = STATE_PARTY_LOBBY;
 }
 }
