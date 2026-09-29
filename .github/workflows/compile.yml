@@ -12,17 +12,17 @@ jobs:
 
       - name: Install Official 3DS Toolchain
         run: |
-          # 1. Download and run the official devkitPro installer script
-          wget https://devkitpro.org
+          # The secret flag (-U) forces the devkitPro server to accept our connection
+          wget -U "dkp-apt" https://apt.devkitpro.org/install-devkitpro-pacman
           chmod +x install-devkitpro-pacman
           sudo ./install-devkitpro-pacman --noconfirm
           
-          # 2. Directly install the 3DS development packages
+          # Directly install the 3DS development packages
           sudo /opt/devkitpro/pacman/bin/pacman -S --noconfirm 3ds-dev
 
       - name: Compile 3DSX
         run: |
-          # 3. Point to the fresh tools
+          # Map out the exact tool file paths manually
           export DEVKITPRO=/opt/devkitpro
           export DEVKITARM=$DEVKITPRO/devkitARM
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
