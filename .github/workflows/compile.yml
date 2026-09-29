@@ -5,19 +5,23 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up devkitPRO Environment
-        uses: devkitPro/actions/setup-tools@v1
-        with:
-          # This forces GitHub to load the exact, stable 3DS packages directly
-          platform: 3ds
-
       - name: Compile 3DSX
         run: |
+          # 1. Bypass git security walls on GitHub's server
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          
+          # 2. Tell the system exactly where devkitPro is hidden inside the container
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITARM=$DEVKITPRO/devkitARM
+          export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
+          
+          # 3. Run the compiler
           make
           
       - name: Upload Finished 3DSX File
