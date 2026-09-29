@@ -5,35 +5,37 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
+    # This uses the official devkitPro image, but overrides permissions safely
+    container:
+      image: devkitpro/devkitarm:latest
+      options: --user root
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Official 3DS Toolchain
+      - name: Install 3DS Components Natively
         run: |
-          wget -U "dkp-apt" https://devkitpro.org
-          chmod +x install-devkitpro-pacman
-          sudo ./install-devkitpro-pacman --noconfirm
-          sudo /opt/devkitpro/pacman/bin/pacman -S --noconfirm 3ds-dev
+          # 1. Update the internal package manager directly without a website link
+          dkp-pacman -Syy --noconfirm
+          
+          # 2. Force install the core 3DS hardware libraries 
+          dkp-pacman -S --noconfirm 3ds-dev
 
       - name: Compile 3DSX
         run: |
+          # 3. Explicitly link the environment paths
           export DEVKITPRO=/opt/devkitpro
           export DEVKITARM=$DEVKITPRO/devkitARM
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
           
-          # This forces the compiler to look in the exact directory where 3ds.h was installed
-          export EXTRACXXFLAGS="-I/opt/devkitpro/libctru/include"
-          export EXTRACFLAGS="-I/opt/devkitpro/libctru/include"
-          
           make clean || true
-          make EXTRACXXFLAGS="$EXTRACXXFLAGS" EXTRACFLAGS="$EXTRACFLAGS"
+          make
           
       - name: Upload Finished 3DSX File
         uses: actions/upload-artifact@v4
         with:
-          name: miiclub-build
+          name: mii-club-build
           path: |
             *.3dsx
             *.elf
