@@ -12,23 +12,23 @@ jobs:
 
       - name: Install Official 3DS Toolchain
         run: |
-          # The secret flag (-U) forces the devkitPro server to accept our connection
-          wget -U "dkp-apt" https://apt.devkitpro.org/install-devkitpro-pacman
+          wget -U "dkp-apt" https://devkitpro.org
           chmod +x install-devkitpro-pacman
           sudo ./install-devkitpro-pacman --noconfirm
-          
-          # Directly install the 3DS development packages
           sudo /opt/devkitpro/pacman/bin/pacman -S --noconfirm 3ds-dev
 
       - name: Compile 3DSX
         run: |
-          # Map out the exact tool file paths manually
           export DEVKITPRO=/opt/devkitpro
           export DEVKITARM=$DEVKITPRO/devkitARM
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
           
+          # This forces the compiler to look in the exact directory where 3ds.h was installed
+          export EXTRACXXFLAGS="-I/opt/devkitpro/libctru/include"
+          export EXTRACFLAGS="-I/opt/devkitpro/libctru/include"
+          
           make clean || true
-          make
+          make EXTRACXXFLAGS="$EXTRACXXFLAGS" EXTRACFLAGS="$EXTRACFLAGS"
           
       - name: Upload Finished 3DSX File
         uses: actions/upload-artifact@v4
