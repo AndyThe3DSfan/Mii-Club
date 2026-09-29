@@ -53,7 +53,7 @@ static void printMiiFace(int idx, const char* mood = "normal") {
     if (std::strcmp(mood, "win") == 0) {
         printf(CLR_YELLOW "^_^" CLR_GREEN "]* ");
     } else if (std::strcmp(mood, "lose") == 0) {
-        printf(CLR_BLUE ";_;" CLR_GREEN " ]  ");
+        printf(CLR_BLUE ";_;" CLR_GREEN "]  ");
     } else if (std::strcmp(mood, "action") == 0) {
         printf(CLR_RED ">_<" CLR_GREEN "]  ");
     } else {
@@ -146,7 +146,8 @@ static void playMiiTarget() {
     printf("\x1b[1;1H" CLR_CYAN "====================================\n");
     printf("            MII TARGET              \n");
     printf("====================================\n\n" CLR_RESET);
-    printf("Press " CLR_GREEN "A" CLR_RESET " when block reaches [" CLR_RED "X" CL_RESET "]!\n");
+    // FIXED: Cleaned up line 149 macro text formatting completely
+    printf("Press " CLR_GREEN "A" CLR_RESET " when block reaches [" CLR_RED "X" CLR_RESET "]!\n");
     svcSleepThread(1500000000ULL);
     int position = 0;
     int direction = 1;
@@ -270,14 +271,15 @@ static void processMinigameResults() {
 static void showMainMenu() {
     printf("\x1b[1;1H");
     printf(CLR_CYAN "====================================\n");
-    printf("             MII CLUB 3DS           \n");
+printf("             MII CLUB 3DS           \n");
 printf("====================================\n\n" CLR_RESET);
 const char* options[5] = { "🎉 Party Mode ", "⚡ Quick Game ", "👤 Manage Miis", "🏆 Records    ", "⚙️ Settings   " };
 for (int i = 0; i < 5; i++) {
 if (menu_selection == i) printf(CLR_YELLOW " -> [ %s ]\n" CLR_RESET, options[i]);
 else printf("    %s   \n", options[i]);
 }
-printf("\nUse " CLR_GREEN "D-Pad Up/Down" CLR_RESET " to Move | " CLR_GREEN "A" CL_RESET " to Select\n");
+// FIXED: Corrected line 280 color tag groupings completely
+printf("\nUse %sD-Pad Up/Down%s to Move | %sA%s to Select\n", CLR_GREEN, CLR_RESET, CLR_GREEN, CLR_RESET);
 printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DDOWN) menu_selection = (menu_selection + 1) % 5;
@@ -304,7 +306,8 @@ printf("====================================\n\n" CLR_RESET);
 printf(" -> Match Settings:\n");
 printf("    Total Rounds: [ " CLR_YELLOW "%d" CLR_RESET " ] \n\n", total_game_rounds);
 printf(" Press " CLR_GREEN "LEFT/RIGHT" CLR_RESET " on D-Pad to change rounds\n");
-printf(" Press " CLR_GREEN "A" CL_RESET " to Launch Profile Configuration!\n");
+// FIXED: Corrected line 307 color tag groupings completely
+printf(" Press %sA%s to Launch Profile Configuration!\n", CLR_GREEN, CLR_RESET);
 printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DLEFT) { if (total_game_rounds > 1) total_game_rounds--; }
@@ -324,7 +327,6 @@ printf("\x1b[1;1H");
 printf(CLR_CYAN "====================================\n");
 printf("            MII CLUB LOBBY          \n");
 printf("====================================\n\n" CLR_RESET);
-// FIXED: Patched line 334 text token breaks perfectly matching your short layout length!
 printf(" Round %s%d%s / %s%d%s \n\n", CLR_YELLOW, current_round, CLR_RESET, CLR_YELLOW, total_game_rounds, CLR_RESET);
 printf("Current Roster Standings:\n");
 for (int i = 0; i < 4; i++) {
@@ -333,7 +335,6 @@ printMiiFace(i, "normal");
 printf(" %s%s%s: %s%d%s %s\n", CLR_YELLOW, ICON_STAR, CLR_RESET, CLR_YELLOW, players[i].total_stars, CLR_RESET, players[i].is_cpu ? "\x1b[34;1m[CPU]\x1b[0m" : "\x1b[32;1m[YOU]\x1b[0m");
 }
 printf("\nNext Minigame Loaded automatically!\n");
-// FIXED: Patched line 337 text token breaks perfectly matching your short layout length!
 printf("Press %sA%s to Start Match Run...       \n", CLR_GREEN, CLR_RESET);
 if (hidKeysDown() & KEY_A) {
 consoleClear();
@@ -349,7 +350,7 @@ printf("The Party Game has concluded!\n\nFinal Scoreboard:\n");
 int winner_idx = 0;
 int max_stars = -1;
 for (int i = 0; i < 4; i++) {
-printf(" %s%-10s%s: %s%d %s\n" CLR_RESET, CLR_GREEN, players[i].name, CLR_RESET, CLR_YELLOW, players[i].total_stars, ICON_STAR);
+printf(" %s%-10s%s: %s%d %s\n", CLR_GREEN, players[i].name, CLR_RESET, CLR_YELLOW, players[i].total_stars, ICON_STAR);
 if (players[i].total_stars > max_stars) {
 max_stars = players[i].total_stars;
 winner_idx = i;
@@ -357,7 +358,6 @@ winner_idx = i;
 }
 printf("\n%s WINNER IS: %s! %s\n", CLR_YELLOW ICON_CROWN, players[winner_idx].name, ICON_CROWN CLR_RESET);
 printMiiFace(winner_idx, "win");
-// FIXED: Patched line 360 text token breaks perfectly matching your short layout length!
 printf("\n\nPress %sA%s to return to Main Menu...           \n", CLR_GREEN, CLR_RESET);
 if (hidKeysDown() & KEY_A) {
 consoleClear();
