@@ -4,7 +4,6 @@
 TARGET   := miiclub
 BUILD    := build
 SOURCES  := source
-# FIXED: We explicitly tell the Makefile to look inside the libctru include directory!
 INCLUDES := -I$(DEVKITPRO)/libctru/include
 
 #---------------------------------------------------------------------------------
@@ -14,8 +13,9 @@ include $(DEVKITPRO)/devkitARM/base_rules
 
 CXXFLAGS := -MMD -MP -MF $(@:.o=.d) -O2 -Wall -Wextra -std=gnu++17 -fno-rtti -fno-exceptions
 CFLAGS   := -MMD -MP -MF $(@:.o=.d) -O2 -Wall -Wextra
-# FIXED: We tell the linker exactly where to find the physical 3DS libctru binaries
-LIBS     := -L$(DEVKITPRO)/libctru/lib -lctru
+
+# FIXED: Added the required 3dsx specs flag so the 3DS system handles link properly!
+LIBS     := -specs=3dsx.specs -L$(DEVKITPRO)/libctru/lib -lctru
 
 ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
