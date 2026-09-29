@@ -5,7 +5,6 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    # This uses the official devkitPro image, but overrides permissions safely
     container:
       image: devkitpro/devkitarm:latest
       options: --user root
@@ -16,21 +15,21 @@ jobs:
 
       - name: Install 3DS Components Natively
         run: |
-          # 1. Update the internal package manager directly without a website link
           dkp-pacman -Syy --noconfirm
-          
-          # 2. Force install the core 3DS hardware libraries 
           dkp-pacman -S --noconfirm 3ds-dev
 
       - name: Compile 3DSX
         run: |
-          # 3. Explicitly link the environment paths
           export DEVKITPRO=/opt/devkitpro
           export DEVKITARM=$DEVKITPRO/devkitARM
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
           
+          # This forces the compiler to look in the exact directory where 3ds.h was just installed
+          export EXTRACXXFLAGS="-I/opt/devkitpro/libctru/include"
+          export EXTRACFLAGS="-I/opt/devkitpro/libctru/include"
+          
           make clean || true
-          make
+          make EXTRACXXFLAGS="$EXTRACXXFLAGS" EXTRACFLAGS="$EXTRACFLAGS"
           
       - name: Upload Finished 3DSX File
         uses: actions/upload-artifact@v4
