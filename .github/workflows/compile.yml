@@ -10,39 +10,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download and Setup 3DS Toolchain
-        run: |
-          # 1. Download official portable devkitARM and 3DS development rules
-          mkdir -p $HOME/devkitpro
-          wget -qO- https://github.com | tar -xzf - -C $HOME/devkitpro
-          
-          # 2. Grab a stable build of the arm compiler binaries directly
-          wget -q https://github.com
-          tar -xf devkitarm-r55-x86_64-linux.tar.xz -C $HOME/devkitpro
-          
-          # 3. Pull down the missing 3ds.h and libctru header files directly into the repository
-          git clone --depth=1 https://github.com
-          mkdir -p source/include
-          cp -r libctru/libctru/include/* source/
+      # This officially installs the exact 3DS toolchain straight to the runner
+      - name: Set up devkitPro
+        uses: devkitPro/actions-setup@v1
+        with:
+          actions: '3ds-dev'
 
       - name: Compile 3DSX
         run: |
-          # Setup paths for the bare compiler variables
-          export DEVKITPRO=$HOME/devkitpro
+          # 3DS rules require the environment flags to point to the newly installed tools
+          export DEVKITPRO=/opt/devkitpro
           export DEVKITARM=$DEVKITPRO/devkitARM
           export PATH=$DEVKITPRO/tools/bin:$DEVKITARM/bin:$PATH
           
-          # Force compiler flags to look inside our pulled include folders for 3ds.h
-          export EXTRACXXFLAGS="-I../libctru/libctru/include"
-          export EXTRACFLAGS="-I../libctru/libctru/include"
-          
           make clean || true
-          make EXTRACXXFLAGS="$EXTRACXXFLAGS" EXTRACFLAGS="$EXTRACFLAGS"
+          make
           
       - name: Upload Finished 3DSX File
         uses: actions/upload-artifact@v4
         with:
-          name: my-3ds-game-build
+          name: miiclub-build
           path: |
             *.3dsx
             *.elf
