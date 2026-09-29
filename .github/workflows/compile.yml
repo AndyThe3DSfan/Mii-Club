@@ -5,16 +5,12 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkitarm:latest
+    # This image has 3ds-dev, libctru, and citro3d completely pre-installed!
+    container: devkitpro/devkit3ds:latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Install 3DS Development Libraries
-        run: |
-          # Installs libctru, citro3d, and the 3DS build rules
-          sudo dkp-pacman -Syu --noconfirm 3ds-dev
 
       - name: Compile 3DSX
         run: |
