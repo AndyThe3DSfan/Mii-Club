@@ -1,10 +1,11 @@
 # Mii Club 3DS - devkitPro/devkitARM project
 # Requires the 3DS development packages from devkitPro.
 
-TARGET  := miiclub
-BUILD   := build
-SOURCES := source
-INCLUDES :=
+TARGET   := miiclub
+BUILD    := build
+SOURCES  := source
+# FIXED: We explicitly tell the Makefile to look inside the libctru include directory!
+INCLUDES := -I$(DEVKITPRO)/libctru/include
 
 #---------------------------------------------------------------------------------
 # Basic devkitPro 3DS build setup
@@ -13,7 +14,8 @@ include $(DEVKITPRO)/devkitARM/base_rules
 
 CXXFLAGS := -MMD -MP -MF $(@:.o=.d) -O2 -Wall -Wextra -std=gnu++17 -fno-rtti -fno-exceptions
 CFLAGS   := -MMD -MP -MF $(@:.o=.d) -O2 -Wall -Wextra
-LIBS     := -lctru
+# FIXED: We tell the linker exactly where to find the physical 3DS libctru binaries
+LIBS     := -L$(DEVKITPRO)/libctru/lib -lctru
 
 ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
@@ -27,7 +29,7 @@ $(BUILD):
 	mkdir -p $@
 
 $(BUILD)/%.o: $(SOURCES)/%.cpp | $(BUILD)
-	$(CXX) $(ARCH) $(CXXFLAGS) -I$(INCLUDES) -c $< -o $@
+	$(CXX) $(ARCH) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 $(TARGET).elf: $(OBJECTS)
 	$(CXX) $(ARCH) $(OBJECTS) $(LIBS) -o $@
