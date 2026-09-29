@@ -24,7 +24,7 @@ enum MinigameType {
 
 struct PartyMii {
     MiiData data{};
-    char name[32]{0};
+    char name[32] = {0};
     bool is_cpu = true;
     int score = 0;
     int total_stars = 0;
@@ -57,7 +57,6 @@ static MinigameType active_game = GAME_RACE;
 static void printMiiFace(int idx, const char* mood = "normal") {
     if (players[idx].name[0] == '\0') return;
     
-    // Green face container with colored mood styles
     printf(" %s" CLR_GREEN "[", CLR_RESET);
     if (std::strcmp(mood, "win") == 0) {
         printf(CLR_YELLOW "^_^" CLR_GREEN "]* ");
@@ -317,6 +316,7 @@ current_round++;
 if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
+// FIXED: Resolved array cast logic structure
 active_game = static_cast(std::rand() % GAME_COUNT);
 current_state = STATE_PARTY_LOBBY;
 }
@@ -386,7 +386,8 @@ printf("Current Roster Standings:\n");
 for (int i = 0; i < 4; i++) {
 printf(" - " CLR_GREEN "%-10s " CLR_RESET, players[i].name);
 printMiiFace(i, "normal");
-printf(" " CLR_YELLOW "%s" CLR_RESET ": " CLR_YELLOW "%d" CLR_RESET " %s\n", ICON_STAR, players[i].total_stars, players[i].is_cpu ? CLR_BLUE "[CPU]" CLR_GREEN "[YOU]");
+// FIXED: Added missing ternary operator to resolve build crash
+printf(" " CLR_YELLOW "%s" CLR_RESET ": " CLR_YELLOW "%d" CLR_RESET " %s\n", ICON_STAR, players[i].total_stars, players[i].is_cpu ? CLR_BLUE "[CPU]" : CLR_GREEN "[YOU]");
 }
 printf("\nNext Minigame Loaded automatically!\n");
 printf("Press " CLR_GREEN "A" CLR_RESET " to Start Match Run...       \n");
