@@ -5,12 +5,24 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    # This image has 3ds-dev, libctru, and citro3d completely pre-installed!
-    container: devkitpro/devkit3ds:latest
+    # This uses the official working image name
+    container: 
+      image: devkitpro/devkitarm:latest
+      options: --user root
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Update Pacman Databases
+        run: |
+          # Safely syncs databases within the container
+          dkp-pacman -Sy --noconfirm
+
+      - name: Install 3DS Development Tools
+        run: |
+          # Safely installs the 3ds components without sudo blocks
+          dkp-pacman -S --noconfirm 3ds-dev
 
       - name: Compile 3DSX
         run: |
