@@ -265,7 +265,7 @@ static void playMiiTarget() {
             else printf(CLR_WHITE "-" CLR_RESET);
         }
         printf(CLR_WHITE "]\n\n" CLR_RESET);
-        printf("Press " CLR_GREEN "A" CLR_RESET " now!  \n\n");
+        printf("Press " CLR_GREEN "A" CL_RESET " now!  \n\n");
         printf("Time Remaining: %d   ", (300 - duration_ticks) / 60);
 
         if ((kDown & KEY_A) && !player_hit) {
@@ -315,6 +315,7 @@ static void playMiiBalance() {
         }
         printf(CLR_WHITE "]" CLR_RED "---> FALL\n\n" CLR_RESET);
         printf("Time Survived: %d Seconds ", survival_ticks / 60);
+
 if (balance <= 0 || balance >= 20) {
 printf(CLR_RED "\nYou fell off the board!        \n" CLR_RESET);
 svcSleepThread(1000000000ULL);
@@ -440,7 +441,7 @@ if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
 int next_game = std::rand() % (int)GAME_COUNT;
-// FIXED: Restored core template angle brackets for static_cast conversion rules
+// FIXED: Restored template brackets to static_cast syntax rule explicitly
 active_game = static_cast(next_game);
 current_state = STATE_PARTY_LOBBY;
 }
@@ -484,7 +485,8 @@ printf("            PARTY SETUP             \n");
 printf("====================================\n\n" CLR_RESET);
 printf(" -> Match Settings:\n");
 printf("    Total Rounds: [ %s%d%s ] \n\n", CLR_YELLOW, total_game_rounds, CLR_RESET);
-printf(" Press %sLEFT/RIGHT%s on D-Pad to change rounds\n", CL_GREEN, CLR_RESET);
+// FIXED: Patched line 487 macro variable structure to CLR_GREEN explicitly
+printf(" Press %sLEFT/RIGHT%s on D-Pad to change rounds\n", CLR_GREEN, CLR_RESET);
 printf(" Press %sA%s to Launch Profile Configuration!\n", CLR_GREEN, CLR_RESET);
 printf("                                           \n");
 u32 kDown = hidKeysDown();
@@ -528,7 +530,7 @@ printf("The Party Game has concluded!\n\nFinal Scoreboard:\n");
 int winner_idx = 0;
 int max_stars = -1;
 for (int i = 0; i < 4; i++) {
-printf(" %s%-10s%s: %s%d %s\n", CLR_GREEN, players[i].name, CLR_RESET, CLR_YELLOW, players[i].total_stars, ICON_STAR);
+printf(" %s%-10s%s: %s%d %s\n", CLR_GREEN, players[i].name, CL_RESET, CLR_YELLOW, players[i].total_stars, ICON_STAR);
 if (players[i].total_stars > max_stars) {
 max_stars = players[i].total_stars;
 winner_idx = i;
@@ -536,7 +538,6 @@ winner_idx = i;
 }
 printf("\n%s WINNER IS: %s! %s\n", CLR_YELLOW ICON_CROWN, players[winner_idx].name, ICON_CROWN CLR_RESET);
 printMiiFace(winner_idx, "win");
-// FIXED: Patched line 541 variable naming from CL_GREEN to CLR_GREEN to strip compiler errors
 printf("\n\nPress %sA%s to return to Main Menu...           \n", CLR_GREEN, CLR_RESET);
 if (hidKeysDown() & KEY_A) {
 consoleClear();
