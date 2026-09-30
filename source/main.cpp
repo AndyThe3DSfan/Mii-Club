@@ -25,13 +25,12 @@ enum MinigameType {
 
 struct PartyMii {
     MiiData data;
-    char name[32]; 
+    char name[16]; 
     bool is_cpu;
     int score;
     int total_stars;
 };
 
-// FIXED: Defined four separate variables so iPad copy-paste cannot delete array brackets!
 static PartyMii mii1;
 static PartyMii mii2;
 static PartyMii mii3;
@@ -118,7 +117,6 @@ static void printMiiFace(int idx, const char* mood = "normal") {
     printf("%s", CLR_RESET);
 }
 
-// Helper to launch applet on distinct profiles
 static bool launchMiiSelector(int slot, bool isCpu) {
     MiiSelectorConf conf;
     MiiSelectorReturn ret;
@@ -193,7 +191,8 @@ static void playMiiRace() {
     printf("\x1b[1;1H" CLR_CYAN "====================================\n");
     printf("            MII SPRINT              \n");
     printf("====================================\n\n" CLR_RESET);
-    printf("Mash " CLR_GREEN "A" CLR_RESET " to run! Tap " CL_YELLOW "B" CLR_RESET " to jump barriers!\n");
+    // FIXED: Corrected CLR_YELLOW layout code syntax here
+    printf("Mash %sA%s to run! Tap %sB%s to jump barriers!\n", CLR_GREEN, CLR_RESET, CLR_YELLOW, CLR_RESET);
     printf("Get ready...\n\n");
     svcSleepThread(1500000000ULL);
 
@@ -222,25 +221,21 @@ static void playMiiRace() {
 
         printf("\x1b[6;1H");
         
-        // Render Player 1
         printf(CLR_GREEN "%-10s " CLR_RESET, mii1.name); printMiiFace(0, "action");
         printf("\n|");
         for (int p = 0; p < 30; p++) { if (p == p1) printf("M"); else if (p == barrier_pos) printf("!"); else printf("_"); }
         printf("|\n\n");
 
-        // Render Player 2
         printf(CLR_GREEN "%-10s " CLR_RESET, mii2.name); printMiiFace(1, "action");
         printf("\n|");
         for (int p = 0; p < 30; p++) { if (p == p2) printf("M"); else if (p == barrier_pos) printf("!"); else printf("_"); }
         printf("|\n\n");
 
-        // Render Player 3
         printf(CLR_GREEN "%-10s " CLR_RESET, mii3.name); printMiiFace(2, "action");
         printf("\n|");
         for (int p = 0; p < 30; p++) { if (p == p3) printf("M"); else if (p == barrier_pos) printf("!"); else printf("_"); }
         printf("|\n\n");
 
-        // Render Player 4
         printf(CLR_GREEN "%-10s " CLR_RESET, mii4.name); printMiiFace(3, "action");
         printf("\n|");
         for (int p = 0; p < 30; p++) { if (p == p4) printf("M"); else if (p == barrier_pos) printf("!"); else printf("_"); }
@@ -311,9 +306,9 @@ static void playMiiTarget() {
 
 static void playMiiBalance() {
     consoleClear();
-printf("\x1b[1;1H" CLR_CYAN "====================================\n");
-printf("           MII BALANCE              \n");
-printf("====================================\n\n" CLR_RESET);
+    printf("\x1b[1;1H" CLR_CYAN "====================================\n");
+    printf("           MII BALANCE              \n");
+    printf("====================================\n\n" CLR_RESET);
 printf("Use " CLR_GREEN "LEFT/RIGHT" CLR_RESET " D-Pad to stay balanced!\n");
 svcSleepThread(1500000000ULL);
 int balance = 10;
@@ -422,10 +417,11 @@ mii1.total_stars += mii1.score;
 mii2.total_stars += mii2.score;
 mii3.total_stars += mii3.score;
 mii4.total_stars += mii4.score;
-printf("1. " CLR_GREEN "%-10s " CLR_RESET, mii1.name); printMiiFace(0); printf(" Earned: +%d (Total: %d)\n", mii1.score, mii1.total_stars);
-printf("2. " CLR_GREEN "%-10s " CLR_RESET, mii2.name); printMiiFace(1); printf(" Earned: +%d (Total: %d)\n", mii2.score, mii2.total_stars);
-printf("3. " CLR_GREEN "%-10s " CL_RESET, mii3.name); printMiiFace(2); printf(" Earned: +%d (Total: %d)\n", mii3.score, mii3.total_stars);
-printf("4. " CLR_GREEN "%-10s " CL_RESET, mii4.name); printMiiFace(3); printf(" Earned: +%d (Total: %d)\n", mii4.score, mii4.total_stars);
+// FIXED: Split lines 427/428 into completely short segments so copy-pasting never fails quote alignment
+printf("1. %s%-10s%s", CLR_GREEN, mii1.name, CLR_RESET); printMiiFace(0); printf(" Earned: +%d (Total: %d)\n", mii1.score, mii1.total_stars);
+printf("2. %s%-10s%s", CLR_GREEN, mii2.name, CLR_RESET); printMiiFace(1); printf(" Earned: +%d (Total: %d)\n", mii2.score, mii2.total_stars);
+printf("3. %s%-10s%s", CLR_GREEN, mii3.name, CLR_RESET); printMiiFace(2); printf(" Earned: +%d (Total: %d)\n", mii3.score, mii3.total_stars);
+printf("4. %s%-10s%s", CLR_GREEN, mii4.name, CLR_RESET); printMiiFace(3); printf(" Earned: +%d (Total: %d)\n", mii4.score, mii4.total_stars);
 printf("\nPress %sA%s to proceed...", CLR_GREEN, CLR_RESET);
 waitForInputWithDelay(KEY_A);
 current_round++;
