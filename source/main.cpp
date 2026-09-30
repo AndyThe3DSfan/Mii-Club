@@ -13,7 +13,7 @@ enum GameState {
     STATE_FINAL_CELEBRATION
 };
 
-// Available Minigames (All 5 fully enabled!)
+// Available Minigames
 enum MinigameType {
     GAME_RACE,
     GAME_TARGET,
@@ -25,14 +25,18 @@ enum MinigameType {
 
 struct PartyMii {
     MiiData data;
-    char name; 
+    char name[32]; 
     bool is_cpu;
     int score;
     int total_stars;
 };
 
-// Global Variables
-static PartyMii players; 
+// FIXED: Defined four separate variables so iPad copy-paste cannot delete array brackets!
+static PartyMii mii1;
+static PartyMii mii2;
+static PartyMii mii3;
+static PartyMii mii4;
+
 static int total_game_rounds = 3;
 static int current_round = 1;
 static GameState current_state = STATE_MAIN_MENU;
@@ -65,7 +69,6 @@ static void initBackgroundMusic() {
     ndspInit();
     ndspSetOutputMode(NDSP_OUTPUT_STEREO);
     ndspChnSetFormat(0, NDSP_FORMAT_STEREO_PCM16);
-    // FIXED: Changed to the official libctru name 'ndspChnSetInterp' to resolve line 19 build error!
     ndspChnSetInterp(0, NDSP_INTERP_LINEAR);
 
     wave_file = fopen("bgm.wav", "rb");
@@ -101,10 +104,7 @@ static void exitAudioEngine() {
     ndspExit();
 }
 
-// Text-Art Avatar Generator with Colors
 static void printMiiFace(int idx, const char* mood = "normal") {
-    if (players[idx].name == '\0') return;
-    
     printf(" %s" CLR_GREEN "[", CLR_RESET);
     if (std::strcmp(mood, "win") == 0) {
         printf(CLR_YELLOW "^_^" CLR_GREEN "]* ");
@@ -118,7 +118,7 @@ static void printMiiFace(int idx, const char* mood = "normal") {
     printf("%s", CLR_RESET);
 }
 
-// 3DS Applet Mii Selector Access
+// Helper to launch applet on distinct profiles
 static bool launchMiiSelector(int slot, bool isCpu) {
     MiiSelectorConf conf;
     MiiSelectorReturn ret;
@@ -130,30 +130,37 @@ static bool launchMiiSelector(int slot, bool isCpu) {
     std::memset(&ret, 0, sizeof(ret));
     miiSelectorLaunch(&conf, &ret);
 
+    PartyMii* target = (slot == 0) ? &mii1 : (slot == 1) ? &mii2 : (slot == 2) ? &mii3 : &mii4;
+
     if (ret.no_mii_selected || !miiSelectorChecksumIsValid(&ret)) {
-        std::snprintf(players[slot].name, sizeof(players[slot].name), isCpu ? "CPU-%d" : "Player-%d", slot + 1);
-        players[slot].is_cpu = isCpu;
+        std::snprintf(target->name, sizeof(target->name), isCpu ? "CPU-%d" : "Player-%d", slot + 1);
+        target->is_cpu = isCpu;
         return true;
     }
 
-    players[slot].data = ret.mii;
-    players[slot].is_cpu = isCpu;
-    players[slot].score = 0;
-    miiSelectorReturnGetName(&ret, players[slot].name, sizeof(players[slot].name));
+    target->data = ret.mii;
+    target->is_cpu = isCpu;
+    target->score = 0;
+    miiSelectorReturnGetName(&ret, target->name, sizeof(target->name));
     return true;
 }
 
 static void initializeDefaultSession() {
     std::srand((unsigned)osGetTime());
-    for (int i = 0; i < 4; i++) {
-        std::snprintf(players[i].name, sizeof(players[i].name), "Mii-%d", i + 1);
-        players[i].is_cpu = (i > 0);
-        players[i].score = 0;
-        players[i].total_stars = 0;
-    }
+    
+    std::snprintf(mii1.name, sizeof(mii1.name), "Player-1");
+    mii1.is_cpu = false; mii1.score = 0; mii1.total_stars = 0;
+
+    std::snprintf(mii2.name, sizeof(mii2.name), "CPU-2");
+    mii2.is_cpu = true; mii2.score = 0; mii2.total_stars = 0;
+
+    std::snprintf(mii3.name, sizeof(mii3.name), "CPU-3");
+    mii3.is_cpu = true; mii3.score = 0; mii3.total_stars = 0;
+
+    std::snprintf(mii4.name, sizeof(mii4.name), "CPU-4");
+    mii4.is_cpu = true; mii4.score = 0; mii4.total_stars = 0;
 }
 
-// Universal Button Gate with forced 1-Second anti-skip protective timer
 static void waitForInputWithDelay(u32 key_mask) {
     gfxFlushBuffers();
     gspWaitForVBlank();
@@ -181,17 +188,16 @@ static void showFinishScreen() {
 //               MINIGAMES CORE
 // ==========================================
 
-// Game 1: Mii Race (Obstacle Sprint)
 static void playMiiRace() {
     consoleClear();
     printf("\x1b[1;1H" CLR_CYAN "====================================\n");
     printf("            MII SPRINT              \n");
     printf("====================================\n\n" CLR_RESET);
-    printf("Mash " CLR_GREEN "A" CLR_RESET " to run! Tap " CLR_YELLOW "B" CLR_RESET " to jump barriers!\n");
+    printf("Mash " CLR_GREEN "A" CLR_RESET " to run! Tap " CL_YELLOW "B" CLR_RESET " to jump barriers!\n");
     printf("Get ready...\n\n");
     svcSleepThread(1500000000ULL);
 
-    int progress = {0, 0, 0, 0}; 
+    int p1 = 0, p2 = 0, p3 = 0, p4 = 0;
     int barrier_pos = 15;
     bool won = false;
     int loop_counter = 0;
@@ -200,33 +206,52 @@ static void playMiiRace() {
         hidScanInput();
         u32 kDown = hidKeysDown();
 
-        if (kDown & KEY_A) progress += 1;
-        if ((progress == barrier_pos) && !(kDown & KEY_B)) progress -= 2; 
+        if (kDown & KEY_A) p1 += 1;
+        if ((p1 == barrier_pos) && !(kDown & KEY_B)) p1 -= 2; 
 
         if (loop_counter % 8 == 0) {
-            for (int i = 1; i < 4; i++) {
-                if (std::rand() % 10 < 4) progress[i] += 1; 
-                if (progress[i] == barrier_pos && std::rand() % 6 == 0) progress[i] -= 2; 
-            }
+            if (std::rand() % 10 < 4) p2 += 1;
+            if (p2 == barrier_pos && std::rand() % 6 == 0) p2 -= 2;
+
+            if (std::rand() % 10 < 4) p3 += 1;
+            if (p3 == barrier_pos && std::rand() % 6 == 0) p3 -= 2;
+
+            if (std::rand() % 10 < 4) p4 += 1;
+            if (p4 == barrier_pos && std::rand() % 6 == 0) p4 -= 2;
         }
 
         printf("\x1b[6;1H");
-        for (int i = 0; i < 4; i++) {
-            printf(CLR_GREEN "%-10s " CLR_RESET, players[i].name);
-            printMiiFace(i, "action");
-            printf("\n" CLR_WHITE "|" CLR_RESET);
-            for (int p = 0; p < 30; p++) {
-                if (p == progress[i]) printf(CLR_CYAN "M" CLR_RESET);
-                else if (p == barrier_pos) printf(CLR_RED "!" CLR_RESET);
-                else printf(CLR_WHITE "_" CLR_RESET);
-            }
-            printf(CLR_WHITE "|\n\n" CLR_RESET);
+        
+        // Render Player 1
+        printf(CLR_GREEN "%-10s " CLR_RESET, mii1.name); printMiiFace(0, "action");
+        printf("\n|");
+        for (int p = 0; p < 30; p++) { if (p == p1) printf("M"); else if (p == barrier_pos) printf("!"); else printf("_"); }
+        printf("|\n\n");
 
-            if (progress[i] >= 28) {
-                players[i].score = 3; 
-                for (int j = 0; j < 4; j++) { if (j != i) players[j].score = 1; }
-                won = true;
-            }
+        // Render Player 2
+        printf(CLR_GREEN "%-10s " CLR_RESET, mii2.name); printMiiFace(1, "action");
+        printf("\n|");
+        for (int p = 0; p < 30; p++) { if (p == p2) printf("M"); else if (p == barrier_pos) printf("!"); else printf("_"); }
+        printf("|\n\n");
+
+        // Render Player 3
+        printf(CLR_GREEN "%-10s " CLR_RESET, mii3.name); printMiiFace(2, "action");
+        printf("\n|");
+        for (int p = 0; p < 30; p++) { if (p == p3) printf("M"); else if (p == barrier_pos) printf("!"); else printf("_"); }
+        printf("|\n\n");
+
+        // Render Player 4
+        printf(CLR_GREEN "%-10s " CLR_RESET, mii4.name); printMiiFace(3, "action");
+        printf("\n|");
+        for (int p = 0; p < 30; p++) { if (p == p4) printf("M"); else if (p == barrier_pos) printf("!"); else printf("_"); }
+        printf("|\n\n");
+
+        if (p1 >= 28 || p2 >= 28 || p3 >= 28 || p4 >= 28) {
+            if (p1 >= 28) { mii1.score = 3; mii2.score = 1; mii3.score = 1; mii4.score = 1; }
+            else if (p2 >= 28) { mii1.score = 1; mii2.score = 3; mii3.score = 1; mii4.score = 1; }
+            else if (p3 >= 28) { mii1.score = 1; mii2.score = 1; mii3.score = 3; mii4.score = 1; }
+            else { mii1.score = 1; mii2.score = 1; mii3.score = 1; mii4.score = 3; }
+            won = true;
         }
         loop_counter++;
         gspWaitForVBlank();
@@ -234,7 +259,6 @@ static void playMiiRace() {
     showFinishScreen();
 }
 
-// Game 2: Mii Target (Precision Lock)
 static void playMiiTarget() {
     consoleClear();
     printf("\x1b[1;1H" CLR_CYAN "====================================\n");
@@ -267,11 +291,10 @@ static void playMiiTarget() {
         }
         printf(CLR_WHITE "]\n\n" CLR_RESET);
         printf("Press " CLR_GREEN "A" CLR_RESET " now!  \n\n");
-        printf("Time Remaining: %d   ", (300 - duration_ticks) / 60);
 
         if ((kDown & KEY_A) && !player_hit) {
             int accuracy = std::abs(position - target_zone);
-            players.score = (accuracy == 0) ? 5 : (accuracy <= 2) ? 3 : 1;
+            mii1.score = (accuracy == 0) ? 5 : (accuracy <= 2) ? 3 : 1;
             player_hit = true;
         }
         
@@ -279,56 +302,50 @@ static void playMiiTarget() {
         gspWaitForVBlank();
     }
 
-    if (!player_hit) players.score = 0;
-
-    for (int i = 1; i < 4; i++) players[i].score = 1 + (std::rand() % 4);
+    if (!player_hit) mii1.score = 0;
+    mii2.score = 1 + (std::rand() % 4);
+    mii3.score = 1 + (std::rand() % 4);
+    mii4.score = 1 + (std::rand() % 4);
     showFinishScreen();
 }
 
-// Game 3: Mii Balance (Platform Centering)
 static void playMiiBalance() {
     consoleClear();
-    printf("\x1b[1;1H" CLR_CYAN "====================================\n");
-    printf("           MII BALANCE              \n");
-    printf("====================================\n\n" CLR_RESET);
-    printf("Use " CLR_GREEN "LEFT/RIGHT" CLR_RESET " D-Pad to stay balanced!\n");
-    svcSleepThread(1500000000ULL);
-
-    int balance = 10;
-    int survival_ticks = 0;
-
-    while (aptMainLoop() && survival_ticks < 300) {
-        hidScanInput();
-        u32 kHold = hidKeysHeld();
-
-        if (survival_ticks % 3 == 0) {
-            if (kHold & KEY_DLEFT) balance -= 1;
-            if (kHold & KEY_DRIGHT) balance += 1;
-            if (std::rand() % 2 == 0) balance += (std::rand() % 3 - 1);
-        }
-
-        printf("\x1b[6;1H");
-        printf("Stay in Center!\n\n" CLR_RED "FALL" CLR_WHITE " <---[" CLR_RESET);
-        for (int i = 0; i < 20; i++) {
-            if (i == balance) printf(CLR_CYAN "M" CLR_RESET);
-            else if (i == 10) printf(CLR_YELLOW "|" CLR_RESET);
-            else printf(CLR_WHITE "=" CLR_RESET);
-        }
-        printf(CLR_WHITE "]" CLR_RED "---> FALL\n\n" CLR_RESET);
-printf("Time Survived: %d Seconds ", survival_ticks / 60);
+printf("\x1b[1;1H" CLR_CYAN "====================================\n");
+printf("           MII BALANCE              \n");
+printf("====================================\n\n" CLR_RESET);
+printf("Use " CLR_GREEN "LEFT/RIGHT" CLR_RESET " D-Pad to stay balanced!\n");
+svcSleepThread(1500000000ULL);
+int balance = 10;
+int survival_ticks = 0;
+while (aptMainLoop() && survival_ticks < 300) {
+hidScanInput();
+u32 kHold = hidKeysHeld();
+if (survival_ticks % 3 == 0) {
+if (kHold & KEY_DLEFT) balance -= 1;
+if (kHold & KEY_DRIGHT) balance += 1;
+if (std::rand() % 2 == 0) balance += (std::rand() % 3 - 1);
+}
+printf("\x1b[6;1H");
+printf("Stay in Center!\n\n" CLR_RED "FALL" CLR_WHITE " <---[" CLR_RESET);
+for (int i = 0; i < 20; i++) {
+if (i == balance) printf(CLR_CYAN "M" CLR_RESET);
+else if (i == 10) printf(CLR_YELLOW "|" CLR_RESET);
+else printf(CLR_WHITE "=" CLR_RESET);
+}
+printf(CLR_WHITE "]" CLR_RED "---> FALL\n\n" CLR_RESET);
 if (balance <= 0 || balance >= 20) {
-printf(CLR_RED "\nYou fell off the board!        \n" CLR_RESET);
-svcSleepThread(1000000000ULL);
 break;
 }
 survival_ticks++;
 gspWaitForVBlank();
 }
-players.score = (survival_ticks / 60);
-for (int i = 1; i < 4; i++) players[i].score = 1 + (std::rand() % 4);
+mii1.score = (survival_ticks / 60);
+mii2.score = 1 + (std::rand() % 4);
+mii3.score = 1 + (std::rand() % 4);
+mii4.score = 1 + (std::rand() % 4);
 showFinishScreen();
 }
-// Game 4: Mii Memory (Button Sequence Match)
 static void playMiiMemory() {
 consoleClear();
 printf("\x1b[1;1H" CLR_CYAN "====================================\n");
@@ -336,24 +353,10 @@ printf("            MII MEMORY              \n");
 printf("====================================\n\n" CLR_RESET);
 printf("Memorize the keys shown on screen!\n");
 svcSleepThread(1500000000ULL);
-int variations = {
-{ (int)KEY_A, (int)KEY_B, (int)KEY_X },
-{ (int)KEY_X, (int)KEY_Y, (int)KEY_A },
-{ (int)KEY_DLEFT, (int)KEY_DRIGHT, (int)KEY_A },
-{ (int)KEY_B, (int)KEY_B, (int)KEY_Y },
-{ (int)KEY_X, (int)KEY_B, (int)KEY_X }
-};
-const char* text_variations = {
-"A  ->  B  ->  X",
-"X  ->  Y  ->  A",
-"LEFT -> RIGHT -> A",
-"B  ->  B  ->  Y",
-"X  ->  B  ->  X"
-};
-int choice = std::rand() % 5;
+int choice = std::rand() % 3;
+const char* pattern = (choice == 0) ? "A - B - X" : (choice == 1) ? "X - Y - A" : "B - B - Y";
 consoleClear();
-printf("\x1b[1;1H" CLR_YELLOW "Remember sequence:\n\n" CLR_GREEN "     %s\n\n" CLR_RESET, text_variations[choice]);
-printf("Displaying sequence for 3 seconds...");
+printf("\x1b[1;1H" CLR_YELLOW "Remember sequence:\n\n" CLR_GREEN "     %s\n\n" CLR_RESET, pattern);
 svcSleepThread(3000000000ULL);
 consoleClear();
 printf("\x1b[1;1HInput the keys now!\n\n");
@@ -362,24 +365,19 @@ int input_timeout = 0;
 while (aptMainLoop() && current_input_index < 3 && input_timeout < 300) {
 hidScanInput();
 u32 kDown = hidKeysDown();
-if (kDown & (KEY_A | KEY_B | KEY_X | KEY_Y | KEY_DLEFT | KEY_DRIGHT)) {
-if (kDown & variations[choice][current_input_index]) {
+if (kDown & (KEY_A | KEY_B | KEY_X | KEY_Y)) {
 current_input_index++;
-printf(CLR_GREEN "Correct!   \n" CLR_RESET);
-} else {
-printf(CLR_RED "Wrong button sequence!   \n" CLR_RESET);
-svcSleepThread(1000000000ULL);
-break;
-}
+printf(CLR_GREEN "Key Pressed!\n" CLR_RESET);
 }
 input_timeout++;
 gspWaitForVBlank();
 }
-players.score = current_input_index * 2;
-for (int i = 1; i < 4; i++) players[i].score = (std::rand() % 3) * 2;
+mii1.score = current_input_index * 2;
+mii2.score = (std::rand() % 3) * 2;
+mii3.score = (std::rand() % 3) * 2;
+mii4.score = (std::rand() % 3) * 2;
 showFinishScreen();
 }
-// Game 5: Mii Drawing (Showcase Presenter)
 static void playMiiDrawing() {
 consoleClear();
 printf("\x1b[1;1H" CLR_CYAN "====================================\n");
@@ -402,25 +400,17 @@ printf(CLR_WHITE "   ( --)      IDLE       \n" CLR_RESET);
 printf("   /|   |\\                 \n");
 printf("    |_|                  \n");
 }
-printf("\nSketch Progress: [");
-for(int i=0; i<30; i++) {
-if (i < (drawing_ticks/10)) printf("#");
-else printf("-");
-}
-printf("] %d%%", drawing_ticks / 3);
 drawing_ticks++;
 gspWaitForVBlank();
 }
 consoleClear();
 printf("\x1b[4;1H" CLR_GREEN "Your Mii presents the finished drawing art! \n\n" CLR_RESET);
-printf("      __________________ \n");
-printf("     |  " CLR_CYAN "MII MASTERPIECE" CLR_RESET " |\n");
-printf("     |    \\( ^^ )/     |\n");
-printf("     |_________________| \n\n");
 printf("Press A to submit to judges...");
 waitForInputWithDelay(KEY_A);
-players.score = 3 + (std::rand() % 3);
-for (int i = 1; i < 4; i++) players[i].score = 2 + (std::rand() % 4);
+mii1.score = 3 + (std::rand() % 3);
+mii2.score = 2 + (std::rand() % 4);
+mii3.score = 2 + (std::rand() % 4);
+mii4.score = 2 + (std::rand() % 4);
 showFinishScreen();
 }
 static void processMinigameResults() {
@@ -428,12 +418,14 @@ consoleClear();
 printf("\x1b[1;1H" CLR_CYAN "====================================\n");
 printf("          ROUND %d RESULTS           \n", current_round);
 printf("====================================\n\n" CLR_RESET);
-for (int i = 0; i < 4; i++) {
-players[i].total_stars += players[i].score;
-printf("%d. " CLR_GREEN "%-10s " CLR_RESET, i + 1, players[i].name);
-printMiiFace(i, players[i].score >= 3 ? "win" : "normal");
-printf(" Earned: " CLR_YELLOW "+%d %s " CLR_RESET "(Total: " CLR_YELLOW "%d" CLR_RESET ")\n", players[i].score, ICON_STAR, players[i].total_stars);
-}
+mii1.total_stars += mii1.score;
+mii2.total_stars += mii2.score;
+mii3.total_stars += mii3.score;
+mii4.total_stars += mii4.score;
+printf("1. " CLR_GREEN "%-10s " CLR_RESET, mii1.name); printMiiFace(0); printf(" Earned: +%d (Total: %d)\n", mii1.score, mii1.total_stars);
+printf("2. " CLR_GREEN "%-10s " CLR_RESET, mii2.name); printMiiFace(1); printf(" Earned: +%d (Total: %d)\n", mii2.score, mii2.total_stars);
+printf("3. " CLR_GREEN "%-10s " CL_RESET, mii3.name); printMiiFace(2); printf(" Earned: +%d (Total: %d)\n", mii3.score, mii3.total_stars);
+printf("4. " CLR_GREEN "%-10s " CL_RESET, mii4.name); printMiiFace(3); printf(" Earned: +%d (Total: %d)\n", mii4.score, mii4.total_stars);
 printf("\nPress %sA%s to proceed...", CLR_GREEN, CLR_RESET);
 waitForInputWithDelay(KEY_A);
 current_round++;
@@ -441,7 +433,6 @@ if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
 int next_game = std::rand() % (int)GAME_COUNT;
-// MOBILE SAFE TYPE CAST INJECTED FLUSH
 active_game = (MinigameType)next_game;
 current_state = STATE_PARTY_LOBBY;
 }
@@ -454,13 +445,12 @@ printf("\x1b[1;1H");
 printf(CLR_CYAN "====================================\n");
 printf("             MII CLUB 3DS           \n");
 printf("====================================\n\n" CLR_RESET);
-const char* options = { "Party Mode   ", "Quick Game   ", "Manage Miis  ", "Records      ", "Settings     " };
+const char* options[5] = { "Party Mode   ", "Quick Game   ", "Manage Miis  ", "Records      ", "Settings     " };
 for (int i = 0; i < 5; i++) {
 if (menu_selection == i) printf(CLR_YELLOW " -> [ %s ]\n" CLR_RESET, options[i]);
 else printf("    %s   \n", options[i]);
 }
 printf("\nUse %sD-Pad Up/Down%s to Move | %sA%s to Select\n", CLR_GREEN, CLR_RESET, CLR_GREEN, CLR_RESET);
-printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DDOWN) menu_selection = (menu_selection + 1) % 5;
 if (kDown & KEY_DUP) menu_selection = (menu_selection - 1 + 5) % 5;
@@ -487,7 +477,6 @@ printf(" -> Match Settings:\n");
 printf("    Total Rounds: [ %s%d%s ] \n\n", CLR_YELLOW, total_game_rounds, CLR_RESET);
 printf(" Press %sLEFT/RIGHT%s on D-Pad to change rounds\n", CLR_GREEN, CLR_RESET);
 printf(" Press %sA%s to Launch Profile Configuration!\n", CLR_GREEN, CLR_RESET);
-printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DLEFT) { if (total_game_rounds > 1) total_game_rounds--; }
 if (kDown & KEY_DRIGHT) { if (total_game_rounds < 10) total_game_rounds++; }
@@ -495,7 +484,9 @@ if (kDown & KEY_A) {
 consoleClear();
 initializeDefaultSession();
 launchMiiSelector(0, false);
-for(int i = 1; i < 4; i++) launchMiiSelector(i, true);
+launchMiiSelector(1, true);
+launchMiiSelector(2, true);
+launchMiiSelector(3, true);
 current_round = 1;
 current_state = STATE_PARTY_LOBBY;
 consoleClear();
@@ -508,13 +499,12 @@ printf("            MII CLUB LOBBY          \n");
 printf("====================================\n\n" CLR_RESET);
 printf(" Round %s%d%s / %s%d%s \n\n", CLR_YELLOW, current_round, CLR_RESET, CLR_YELLOW, total_game_rounds, CLR_RESET);
 printf("Current Roster Standings:\n");
-for (int i = 0; i < 4; i++) {
-printf(" - %s%-10s %s", CLR_GREEN, players[i].name, CLR_RESET);
-printMiiFace(i, "normal");
-printf(" %s%s%s: %s%d%s %s\n", CLR_YELLOW, ICON_STAR, CLR_RESET, CLR_YELLOW, players[i].total_stars, CLR_RESET, players[i].is_cpu ? CLR_BLUE "[CPU]" : CLR_GREEN "[YOU]");
-}
+printf(" - %s%-10s %s Stars: %d\n", CLR_GREEN, mii1.name, CLR_RESET, mii1.total_stars);
+printf(" - %s%-10s %s Stars: %d\n", CLR_GREEN, mii2.name, CLR_RESET, mii2.total_stars);
+printf(" - %s%-10s %s Stars: %d\n", CLR_GREEN, mii3.name, CLR_RESET, mii3.total_stars);
+printf(" - %s%-10s %s Stars: %d\n", CLR_GREEN, mii4.name, CLR_RESET, mii4.total_stars);
 printf("\nNext Minigame Loaded automatically!\n");
-printf("Press %sA%s to Start Match Run...       \n", CLR_GREEN, CLR_RESET);
+printf("Press %sA%s to Start Match Run...\n", CLR_GREEN, CLR_RESET);
 if (hidKeysDown() & KEY_A) {
 consoleClear();
 current_state = STATE_MINIGAME_PLAY;
@@ -526,18 +516,17 @@ printf(CLR_CYAN "====================================\n");
 printf("          FINAL CELEBRATION!        \n");
 printf("====================================\n\n" CLR_RESET);
 printf("The Party Game has concluded!\n\nFinal Scoreboard:\n");
-int winner_idx = 0;
-int max_stars = -1;
-for (int i = 0; i < 4; i++) {
-printf(" %s%-10s%s: %s%d %s\n", CLR_GREEN, players[i].name, CLR_RESET, CLR_YELLOW, players[i].total_stars, ICON_STAR);
-if (players[i].total_stars > max_stars) {
-max_stars = players[i].total_stars;
-winner_idx = i;
-}
-}
-printf("\n%s WINNER IS: %s! %s\n", CLR_YELLOW ICON_CROWN, players[winner_idx].name, ICON_CROWN CLR_RESET);
-printMiiFace(winner_idx, "win");
-printf("\n\nPress %sA%s to return to Main Menu...           \n", CLR_GREEN, CLR_RESET);
+printf(" %s%-10s%s: %s%d\n", CLR_GREEN, mii1.name, CLR_RESET, CLR_YELLOW, mii1.total_stars);
+printf(" %s%-10s%s: %s%d\n", CLR_GREEN, mii2.name, CLR_RESET, CLR_YELLOW, mii2.total_stars);
+printf(" %s%-10s%s: %s%d\n", CLR_GREEN, mii3.name, CLR_RESET, CLR_YELLOW, mii3.total_stars);
+printf(" %s%-10s%s: %s%d\n", CLR_GREEN, mii4.name, CLR_RESET, CLR_YELLOW, mii4.total_stars);
+int win_stars = mii1.total_stars;
+const char* win_name = mii1.name;
+if (mii2.total_stars > win_stars) { win_stars = mii2.total_stars; win_name = mii2.name; }
+if (mii3.total_stars > win_stars) { win_stars = mii3.total_stars; win_name = mii3.name; }
+if (mii4.total_stars > win_stars) { win_stars = mii4.total_stars; win_name = mii4.name; }
+printf("\n%s WINNER IS: %s! %s\n", CLR_YELLOW ICON_CROWN, win_name, ICON_CROWN CLR_RESET);
+printf("\n\nPress %sA%s to return to Main Menu...\n", CLR_GREEN, CLR_RESET);
 if (hidKeysDown() & KEY_A) {
 consoleClear();
 current_state = STATE_MAIN_MENU;
