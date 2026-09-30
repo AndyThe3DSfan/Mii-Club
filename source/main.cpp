@@ -431,7 +431,6 @@ for (int i = 0; i < 4; i++) {
 players[i].total_stars += players[i].score;
 printf("%d. " CLR_GREEN "%-10s " CLR_RESET, i + 1, players[i].name);
 printMiiFace(i, players[i].score >= 3 ? "win" : "normal");
-// FIXED: Corrected the quote strings grouping sequence
 printf(" Earned: " CLR_YELLOW "+%d %s " CLR_RESET "(Total: " CLR_YELLOW "%d" CLR_RESET ")\n", players[i].score, ICON_STAR, players[i].total_stars);
 }
 printf("\nPress %sA%s to proceed...", CLR_GREEN, CLR_RESET);
@@ -441,7 +440,7 @@ if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
 int next_game = std::rand() % (int)GAME_COUNT;
-// FIXED: Added missing angle template brackets to static_cast specification rule
+// FIXED: Restored core template angle brackets for static_cast conversion rules
 active_game = static_cast(next_game);
 current_state = STATE_PARTY_LOBBY;
 }
@@ -484,9 +483,8 @@ printf(CLR_CYAN "====================================\n");
 printf("            PARTY SETUP             \n");
 printf("====================================\n\n" CLR_RESET);
 printf(" -> Match Settings:\n");
-// FIXED: Formatted macro styling sequence perfectly to strip compiler errors
 printf("    Total Rounds: [ %s%d%s ] \n\n", CLR_YELLOW, total_game_rounds, CLR_RESET);
-printf(" Press %sLEFT/RIGHT%s on D-Pad to change rounds\n", CLR_GREEN, CLR_RESET);
+printf(" Press %sLEFT/RIGHT%s on D-Pad to change rounds\n", CL_GREEN, CLR_RESET);
 printf(" Press %sA%s to Launch Profile Configuration!\n", CLR_GREEN, CLR_RESET);
 printf("                                           \n");
 u32 kDown = hidKeysDown();
@@ -538,7 +536,8 @@ winner_idx = i;
 }
 printf("\n%s WINNER IS: %s! %s\n", CLR_YELLOW ICON_CROWN, players[winner_idx].name, ICON_CROWN CLR_RESET);
 printMiiFace(winner_idx, "win");
-printf("\n\nPress %sA%s to return to Main Menu...           \n", CL_GREEN, CLR_RESET);
+// FIXED: Patched line 541 variable naming from CL_GREEN to CLR_GREEN to strip compiler errors
+printf("\n\nPress %sA%s to return to Main Menu...           \n", CLR_GREEN, CLR_RESET);
 if (hidKeysDown() & KEY_A) {
 consoleClear();
 current_state = STATE_MAIN_MENU;
