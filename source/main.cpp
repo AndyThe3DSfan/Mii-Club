@@ -25,14 +25,14 @@ enum MinigameType {
 
 struct PartyMii {
     MiiData data;
-    char name[32]; 
+    char name; 
     bool is_cpu;
     int score;
     int total_stars;
 };
 
 // Global Variables
-static PartyMii players[4]; 
+static PartyMii players; 
 static int total_game_rounds = 3;
 static int current_round = 1;
 static GameState current_state = STATE_MAIN_MENU;
@@ -65,7 +65,8 @@ static void initBackgroundMusic() {
     ndspInit();
     ndspSetOutputMode(NDSP_OUTPUT_STEREO);
     ndspChnSetFormat(0, NDSP_FORMAT_STEREO_PCM16);
-    ndspChnSetInterpRate(0, NDSP_INTERP_LINEAR);
+    // FIXED: Changed to the official libctru name 'ndspChnSetInterp' to resolve line 19 build error!
+    ndspChnSetInterp(0, NDSP_INTERP_LINEAR);
 
     wave_file = fopen("bgm.wav", "rb");
     if (wave_file == NULL) {
@@ -102,7 +103,7 @@ static void exitAudioEngine() {
 
 // Text-Art Avatar Generator with Colors
 static void printMiiFace(int idx, const char* mood = "normal") {
-    if (players[idx].name[0] == '\0') return;
+    if (players[idx].name == '\0') return;
     
     printf(" %s" CLR_GREEN "[", CLR_RESET);
     if (std::strcmp(mood, "win") == 0) {
@@ -190,7 +191,7 @@ static void playMiiRace() {
     printf("Get ready...\n\n");
     svcSleepThread(1500000000ULL);
 
-    int progress[4] = {0, 0, 0, 0}; 
+    int progress = {0, 0, 0, 0}; 
     int barrier_pos = 15;
     bool won = false;
     int loop_counter = 0;
@@ -199,8 +200,8 @@ static void playMiiRace() {
         hidScanInput();
         u32 kDown = hidKeysDown();
 
-        if (kDown & KEY_A) progress[0] += 1;
-        if ((progress[0] == barrier_pos) && !(kDown & KEY_B)) progress[0] -= 2; 
+        if (kDown & KEY_A) progress += 1;
+        if ((progress == barrier_pos) && !(kDown & KEY_B)) progress -= 2; 
 
         if (loop_counter % 8 == 0) {
             for (int i = 1; i < 4; i++) {
@@ -270,7 +271,7 @@ static void playMiiTarget() {
 
         if ((kDown & KEY_A) && !player_hit) {
             int accuracy = std::abs(position - target_zone);
-            players[0].score = (accuracy == 0) ? 5 : (accuracy <= 2) ? 3 : 1;
+            players.score = (accuracy == 0) ? 5 : (accuracy <= 2) ? 3 : 1;
             player_hit = true;
         }
         
@@ -278,7 +279,7 @@ static void playMiiTarget() {
         gspWaitForVBlank();
     }
 
-    if (!player_hit) players[0].score = 0;
+    if (!player_hit) players.score = 0;
 
     for (int i = 1; i < 4; i++) players[i].score = 1 + (std::rand() % 4);
     showFinishScreen();
@@ -314,8 +315,7 @@ static void playMiiBalance() {
             else printf(CLR_WHITE "=" CLR_RESET);
         }
         printf(CLR_WHITE "]" CLR_RED "---> FALL\n\n" CLR_RESET);
-        printf("Time Survived: %d Seconds ", survival_ticks / 60);
-
+printf("Time Survived: %d Seconds ", survival_ticks / 60);
 if (balance <= 0 || balance >= 20) {
 printf(CLR_RED "\nYou fell off the board!        \n" CLR_RESET);
 svcSleepThread(1000000000ULL);
@@ -324,7 +324,7 @@ break;
 survival_ticks++;
 gspWaitForVBlank();
 }
-players[0].score = (survival_ticks / 60);
+players.score = (survival_ticks / 60);
 for (int i = 1; i < 4; i++) players[i].score = 1 + (std::rand() % 4);
 showFinishScreen();
 }
@@ -336,14 +336,14 @@ printf("            MII MEMORY              \n");
 printf("====================================\n\n" CLR_RESET);
 printf("Memorize the keys shown on screen!\n");
 svcSleepThread(1500000000ULL);
-int variations[5][3] = {
+int variations = {
 { (int)KEY_A, (int)KEY_B, (int)KEY_X },
 { (int)KEY_X, (int)KEY_Y, (int)KEY_A },
 { (int)KEY_DLEFT, (int)KEY_DRIGHT, (int)KEY_A },
 { (int)KEY_B, (int)KEY_B, (int)KEY_Y },
 { (int)KEY_X, (int)KEY_B, (int)KEY_X }
 };
-const char* text_variations[5] = {
+const char* text_variations = {
 "A  ->  B  ->  X",
 "X  ->  Y  ->  A",
 "LEFT -> RIGHT -> A",
@@ -375,7 +375,7 @@ break;
 input_timeout++;
 gspWaitForVBlank();
 }
-players[0].score = current_input_index * 2;
+players.score = current_input_index * 2;
 for (int i = 1; i < 4; i++) players[i].score = (std::rand() % 3) * 2;
 showFinishScreen();
 }
@@ -395,7 +395,6 @@ printf("\x1b[6;1H");
 printf("Drawing Canvas Profile Layout:\n\n");
 if (kHold & KEY_A) {
 printf(CLR_YELLOW "   ( o_o)---7  SKETCHING \n" CLR_RESET);
-// FIXED: Escaped the textual drawing limbs to clear out backslash warnings
 printf("   /|   |\\                 \n");
 printf("    ||                  \n");
 } else {
@@ -420,7 +419,7 @@ printf("     |    \\( ^^ )/     |\n");
 printf("     |_________________| \n\n");
 printf("Press A to submit to judges...");
 waitForInputWithDelay(KEY_A);
-players[0].score = 3 + (std::rand() % 3);
+players.score = 3 + (std::rand() % 3);
 for (int i = 1; i < 4; i++) players[i].score = 2 + (std::rand() % 4);
 showFinishScreen();
 }
@@ -442,7 +441,7 @@ if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
 int next_game = std::rand() % (int)GAME_COUNT;
-// FIXED: Shifted code over to a standard mobile-safe C-style type cast loop definition layout to wipe lines 31-44 build errors!
+// MOBILE SAFE TYPE CAST INJECTED FLUSH
 active_game = (MinigameType)next_game;
 current_state = STATE_PARTY_LOBBY;
 }
@@ -455,7 +454,7 @@ printf("\x1b[1;1H");
 printf(CLR_CYAN "====================================\n");
 printf("             MII CLUB 3DS           \n");
 printf("====================================\n\n" CLR_RESET);
-const char* options[5] = { "Party Mode   ", "Quick Game   ", "Manage Miis  ", "Records      ", "Settings     " };
+const char* options = { "Party Mode   ", "Quick Game   ", "Manage Miis  ", "Records      ", "Settings     " };
 for (int i = 0; i < 5; i++) {
 if (menu_selection == i) printf(CLR_YELLOW " -> [ %s ]\n" CLR_RESET, options[i]);
 else printf("    %s   \n", options[i]);
