@@ -185,7 +185,7 @@ static void playMiiRace() {
     consoleClear();
     printf("\x1b[1;1H" CLR_CYAN "====================================\n");
     printf("            MII SPRINT              \n");
-    printf("====================================\n\n" CL_RESET);
+    printf("====================================\n\n" CLR_RESET);
     printf("Mash " CLR_GREEN "A" CLR_RESET " to run! Tap " CLR_YELLOW "B" CLR_RESET " to jump barriers!\n");
     printf("Get ready...\n\n");
     svcSleepThread(1500000000ULL);
@@ -441,7 +441,6 @@ if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
 int next_game = std::rand() % (int)GAME_COUNT;
-// FIXED: Added missing template angle brackets for static_cast conversion rules
 active_game = static_cast(next_game);
 current_state = STATE_PARTY_LOBBY;
 }
@@ -459,7 +458,7 @@ for (int i = 0; i < 5; i++) {
 if (menu_selection == i) printf(CLR_YELLOW " -> [ %s ]\n" CLR_RESET, options[i]);
 else printf("    %s   \n", options[i]);
 }
-printf("\nUse %sD-Pad Up/Down%s to Move | %sA%s to Select\n", CLR_GREEN, CLR_RESET, CL_GREEN, CLR_RESET);
+printf("\nUse %sD-Pad Up/Down%s to Move | %sA%s to Select\n", CLR_GREEN, CLR_RESET, CLR_GREEN, CLR_RESET);
 printf("                                           \n");
 u32 kDown = hidKeysDown();
 if (kDown & KEY_DDOWN) menu_selection = (menu_selection + 1) % 5;
@@ -529,8 +528,8 @@ printf("The Party Game has concluded!\n\nFinal Scoreboard:\n");
 int winner_idx = 0;
 int max_stars = -1;
 for (int i = 0; i < 4; i++) {
-// FIXED: Patched line 533 text tokens to read CLR_RESET to prevent scope declaration failures
-printf(" %s%-10s: %s%d %s\n", CLR_GREEN, players[i].name, CLR_RESET, CLR_YELLOW, players[i].total_stars, ICON_STAR);
+// FIXED: Arranged arguments to match string placeholders explicitly
+printf(" %s%-10s%s: %s%d %s\n", CLR_GREEN, players[i].name, CLR_RESET, CLR_YELLOW, players[i].total_stars, ICON_STAR);
 if (players[i].total_stars > max_stars) {
 max_stars = players[i].total_stars;
 winner_idx = i;
