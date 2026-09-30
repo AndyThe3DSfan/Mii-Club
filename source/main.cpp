@@ -219,7 +219,7 @@ static void playMiiTarget() {
             else printf(CLR_WHITE "-" CLR_RESET);
         }
         printf(CLR_WHITE "]\n\n" CLR_RESET);
-        printf("Press " CLR_GREEN "A" CLR_RESET " now!  \n\n");
+        printf("Press " CLR_GREEN "A" CL_RESET " now!  \n\n");
         printf("Time Remaining: %d   ", (300 - duration_ticks) / 60);
 
         if ((kDown & KEY_A) && !player_hit) {
@@ -294,7 +294,6 @@ static void playMiiMemory() {
     printf("Memorize the keys shown on screen!\n");
     svcSleepThread(1500000000ULL);
 
-    // FIXED: Formatted 5 distinct combinations for variety!
     int variations[5][3] = {
         { (int)KEY_A, (int)KEY_B, (int)KEY_X },
         { (int)KEY_X, (int)KEY_Y, (int)KEY_A },
@@ -307,7 +306,7 @@ static void playMiiMemory() {
         "A  ->  B  ->  X",
         "X  ->  Y  ->  A",
         "LEFT -> RIGHT -> A",
-"B  ->  B  ->  Y",
+        "B  ->  B  ->  Y",
 "X  ->  B  ->  X"
 };
 int choice = std::rand() % 5;
@@ -392,9 +391,9 @@ for (int i = 0; i < 4; i++) {
 players[i].total_stars += players[i].score;
 printf("%d. " CLR_GREEN "%-10s " CLR_RESET, i + 1, players[i].name);
 printMiiFace(i, players[i].score >= 3 ? "win" : "normal");
-printf(" Earned: " CLR_YELLOW "+%d %s " CL_RESET "(Total: " CLR_YELLOW "%d" CL_RESET ")\n", players[i].score, ICON_STAR, players[i].total_stars);
+printf(" Earned: " CLR_YELLOW "+%d %s " CLR_RESET "(Total: " CLR_YELLOW "%d" CL_RESET ")\n", players[i].score, ICON_STAR, players[i].total_stars);
 }
-printf("\nPress " CLR_GREEN "A" CL_RESET " to proceed...");
+printf("\nPress %sA%s to proceed...", CLR_GREEN, CLR_RESET);
 waitForInputWithDelay(KEY_A);
 current_round++;
 if (current_round > total_game_rounds) {
@@ -443,8 +442,8 @@ printf(CLR_CYAN "====================================\n");
 printf("            PARTY SETUP             \n");
 printf("====================================\n\n" CLR_RESET);
 printf(" -> Match Settings:\n");
-printf("    Total Rounds: [ " CLR_YELLOW "%d" CL_RESET " ] \n\n", total_game_rounds);
-printf(" Press " CLR_GREEN "LEFT/RIGHT" CLR_RESET " on D-Pad to change rounds\n");
+printf("    Total Rounds: [ %s%d%s ] \n\n", CLR_YELLOW, total_game_rounds, CLR_RESET);
+printf(" Press %sLEFT/RIGHT%s on D-Pad to change rounds\n", CLR_GREEN, CLR_RESET);
 printf(" Press %sA%s to Launch Profile Configuration!\n", CLR_GREEN, CLR_RESET);
 printf("                                           \n");
 u32 kDown = hidKeysDown();
