@@ -395,11 +395,12 @@ printf("\x1b[6;1H");
 printf("Drawing Canvas Profile Layout:\n\n");
 if (kHold & KEY_A) {
 printf(CLR_YELLOW "   ( o_o)---7  SKETCHING \n" CLR_RESET);
-printf("   /|   |\                 \n");
+// FIXED: Escaped the textual drawing limbs to clear out backslash warnings
+printf("   /|   |\\                 \n");
 printf("    ||                  \n");
 } else {
 printf(CLR_WHITE "   ( --)      IDLE       \n" CLR_RESET);
-printf("   /|   |\                 \n");
+printf("   /|   |\\                 \n");
 printf("    |_|                  \n");
 }
 printf("\nSketch Progress: [");
@@ -415,7 +416,7 @@ consoleClear();
 printf("\x1b[4;1H" CLR_GREEN "Your Mii presents the finished drawing art! \n\n" CLR_RESET);
 printf("      __________________ \n");
 printf("     |  " CLR_CYAN "MII MASTERPIECE" CLR_RESET " |\n");
-printf("     |    \( ^^ )/     |\n");
+printf("     |    \\( ^^ )/     |\n");
 printf("     |_________________| \n\n");
 printf("Press A to submit to judges...");
 waitForInputWithDelay(KEY_A);
@@ -441,7 +442,8 @@ if (current_round > total_game_rounds) {
 current_state = STATE_FINAL_CELEBRATION;
 } else {
 int next_game = std::rand() % (int)GAME_COUNT;
-active_game = static_cast(next_game);
+// FIXED: Shifted code over to a standard mobile-safe C-style type cast loop definition layout to wipe lines 31-44 build errors!
+active_game = (MinigameType)next_game;
 current_state = STATE_PARTY_LOBBY;
 }
 }
@@ -528,7 +530,6 @@ printf("The Party Game has concluded!\n\nFinal Scoreboard:\n");
 int winner_idx = 0;
 int max_stars = -1;
 for (int i = 0; i < 4; i++) {
-// FIXED: Arranged arguments to match string placeholders explicitly
 printf(" %s%-10s%s: %s%d %s\n", CLR_GREEN, players[i].name, CLR_RESET, CLR_YELLOW, players[i].total_stars, ICON_STAR);
 if (players[i].total_stars > max_stars) {
 max_stars = players[i].total_stars;
